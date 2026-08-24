@@ -130,7 +130,7 @@ ShopSphere follows a **full-stack layered architecture**:
                     │ Transactions             │
                     └──────────────────────────┘
 
-📂 Project Structure
+##📂 Project Structure
 ShopSphere/
 │
 ├── frontend/
@@ -182,7 +182,7 @@ ShopSphere/
 └── README.md
 
 
-🔐 Authentication Flow
+##🔐 Authentication Flow
 User
  │
  ▼
@@ -206,7 +206,7 @@ JWT Authentication Filter
  ▼
 Protected REST API
 
-🔍 Product Search & Filtering
+##🔍 Product Search & Filtering
 
 ShopSphere provides multiple ways to discover products:
 
@@ -229,7 +229,7 @@ Maximum Price:
 In Stock:
 ✓
 
-🛒 Shopping Cart Flow
+##🛒 Shopping Cart Flow
 Browse Products
        │
        ▼
@@ -247,7 +247,7 @@ Calculate Total
        ▼
 Place Order
 
-📦 Order Management
+##📦 Order Management
 After placing an order, users can access their order history and view their purchased products.
 Cart
  │
@@ -266,33 +266,33 @@ Orders Page
  ▼
 View Order History
 
-📸 Screenshots
+##📸 Screenshots
 
-🔐 Login Page
+###🔐 Login Page
 <img width="1915" height="983" alt="image" src="https://github.com/user-attachments/assets/732ac9db-4d77-402e-a63c-64b40297d015" />
 
-🏠Home Screen
+###🏠Home Screen
 <img width="1896" height="985" alt="image" src="https://github.com/user-attachments/assets/f5fb4641-b417-4a0e-8ef8-4da7535895e7" />
 
-🛍️ Products Page
+###🛍️ Products Page
 <img width="1888" height="977" alt="image" src="https://github.com/user-attachments/assets/4589239f-f7fd-4072-beec-1b6ebaafd549" />
 <img width="1887" height="982" alt="image" src="https://github.com/user-attachments/assets/ea983950-cdbc-4f8d-97a9-b31409b98a7e" />
 
-🛒 Shopping Cart
+###🛒 Shopping Cart
 <img width="1891" height="981" alt="image" src="https://github.com/user-attachments/assets/e3bfc8d4-e198-4241-b3f1-4a81a12679bc" />
 
-🛍️Checkout Page
+###🛍️Checkout Page
 <img width="1896" height="987" alt="image" src="https://github.com/user-attachments/assets/681d4e16-7290-4592-8f16-520614d86596" />
 
-📦 Orders Page
+###📦 Orders Page
 <img width="1881" height="982" alt="image" src="https://github.com/user-attachments/assets/446b5023-bfb7-46f8-9d22-8c80d8973d76" />
 
-⚙️ Installation
-1️⃣ Clone the Repository
+##⚙️ Installation
+###1️⃣ Clone the Repository
 git clone https://github.com/shibankardas-programmer/ShopSphere.git
 cd ShopSphere
-2️⃣ Backend Setup
 
+###2️⃣ Backend Setup
 Make sure the following are installed:
 
 Java 21
@@ -301,12 +301,13 @@ MySQL
 
 Open the project in IntelliJ IDEA or VS Code.
 
-3️⃣ Create MySQL Database
+###3️⃣ Create MySQL Database
 
 Open MySQL and create the database:
 
 CREATE DATABASE shopsphere;
-4️⃣ Configure Database
+
+###4️⃣ Configure Database
 
 Open:
 
@@ -322,7 +323,7 @@ spring.jpa.hibernate.ddl-auto=update
 
 Replace your_password with your local MySQL password.
 
-5️⃣ Run the Backend
+###5️⃣ Run the Backend
 
 Using Maven:
 
@@ -335,7 +336,8 @@ Or on Windows:
 The backend runs on:
 
 http://localhost:8080
-6️⃣ Frontend Setup
+
+###6️⃣ Frontend Setup
 
 Open another terminal and navigate to the frontend:
 
@@ -389,7 +391,7 @@ React Frontend
 
 Authentication-protected endpoints require a valid JWT token.
 
-🚀 Future Enhancements
+##🚀 Future Enhancements
 
 The following features can be added in future versions:
 
@@ -420,42 +422,30 @@ Integrating frontend and backend applications
 Implementing search and filtering
 Managing shopping cart and order workflows
 Using Git and GitHub for version control
-👨‍💻 Author
+
+##👨‍💻 Author
 
 Shibankar Das
 
 🎓 B.Tech Computer Science & Engineering
 🏫 Assam down town University
 
-GitHub
+##GitHub
 
 https://github.com/shibankardas-programmer
 
-LinkedIn
+##LinkedIn
 
 https://www.linkedin.com/in/shibankar-das-916517381
 
-⭐ If you like this project
+##⭐ If you like this project
 
 If you find this project useful or interesting, please consider giving it a ⭐ on GitHub!
 
-📄 License
+##📄 License
 
 This project was developed for educational and learning purposes as part of a Java Developer Internship project.
 
-### One thing I deliberately changed
-
-I **didn't put fake screenshots or fake live-demo links** in it. GitHub recommends making projects easy to understand and explore, including screenshots/demo information where available. :contentReference[oaicite:1]{index=1}
-
-So once your submission is done, we can take **5–6 good screenshots of your actual ShopSphere UI** and add them properly to this README. That will make it look *much* more professional than simply having text.
-
-Also, I removed those ugly `[svg](...)` lines from your Student Management README style. GitHub's Markdown supports proper headings and section navigation automatically, so you don't need to manually put those SVG anchor lines everywhere. :contentReference[oaicite:2]{index=2}
-
-**For now, don't deploy yet.** Since we're prioritizing the Codec Technologies submission, I recommend this order:
-
-**README → screenshots → verify both GitHub repositories → email submission → certificate/completion → deployment → LinkedIn post.**
-
-That gives us a clean, professional submission first.
 
 
 
