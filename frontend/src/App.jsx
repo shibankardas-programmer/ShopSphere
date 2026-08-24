@@ -9,6 +9,44 @@ import AdminDashboard from "./AdminDashboard";
 
 const API_URL = "http://localhost:8080/api";
 
+// =========================================================
+// PRODUCT IMAGE MAPPING
+// =========================================================
+
+const productImages = {
+  "AeroSound Wireless Headphones": "/products/headphones.jpg",
+  "Nova Wireless Earbuds": "/products/earbuds.jpg",
+  "KeyPro Mechanical Keyboard": "/products/keyboard.jpg",
+  "SwiftClick Wireless Mouse": "/products/mouse.jpg",
+  "VisionMax Smart TV": "/products/smart-tv.jpg",
+  "VoltCharge Power Bank": "/products/power-bank.jpg",
+  "GlowDesk LED Lamp": "/products/led-lamp.jpg",
+  "SoundPod Bluetooth Speaker": "/products/bluetooth-speaker.jpg",
+  "FlexFit Laptop Stand": "/products/laptop-stand.jpg",
+};
+
+// =========================================================
+// GET PRODUCT IMAGE
+// =========================================================
+
+const getProductImage = (product) => {
+  if (product?.imageUrl) {
+    const imageUrl = String(product.imageUrl).trim();
+
+    if (
+      imageUrl.startsWith("http://") ||
+      imageUrl.startsWith("https://") ||
+      imageUrl.startsWith("/")
+    ) {
+      return imageUrl;
+    }
+
+    return `/products/${imageUrl}`;
+  }
+
+  return productImages[product?.name] || null;
+};
+
 function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -20,22 +58,29 @@ function App() {
     !!localStorage.getItem("jwtToken")
   );
 
-  // ==========================================
-  // ADMIN ACCESS
-  // ==========================================
+  // =========================================================
+  // ADMIN
+  // =========================================================
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
 
-  // ==========================================
+  // =========================================================
   // CURRENT PAGE
-  // ==========================================
+  // =========================================================
 
   const [currentPage, setCurrentPage] = useState("home");
 
-  // ==========================================
+  // =========================================================
+  // FEATURED PRODUCTS
+  // =========================================================
+
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [featuredLoading, setFeaturedLoading] = useState(false);
+
+  // =========================================================
   // CHECK ADMIN ACCESS
-  // ==========================================
+  // =========================================================
 
   const checkAdminAccess = async () => {
     const token = localStorage.getItem("jwtToken");
@@ -57,14 +102,11 @@ function App() {
       });
 
       if (response.ok) {
-        console.log("Admin access confirmed.");
         setIsAdmin(true);
         return true;
       }
 
       if (response.status === 401) {
-        console.log("JWT is invalid or expired.");
-
         localStorage.removeItem("jwtToken");
         localStorage.removeItem("username");
 
@@ -76,7 +118,6 @@ function App() {
       }
 
       if (response.status === 403) {
-        console.log("User is logged in but is not an ADMIN.");
         setIsAdmin(false);
         return false;
       }
@@ -93,28 +134,86 @@ function App() {
     }
   };
 
-  // ==========================================
-  // CHECK ADMIN WHEN LOGIN STATE CHANGES
-  // ==========================================
+  // =========================================================
+  // LOAD FEATURED PRODUCTS
+  // =========================================================
+
+  const loadFeaturedProducts = async () => {
+    const token = localStorage.getItem("jwtToken");
+
+    if (!token) {
+      setFeaturedProducts([]);
+      return;
+    }
+
+    try {
+      setFeaturedLoading(true);
+
+      const response = await fetch(
+        `${API_URL}/products?page=0&size=4&sort=id`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(
+          "Failed to load featured products:",
+          response.status
+        );
+
+        setFeaturedProducts([]);
+        return;
+      }
+
+      const data = await response.json();
+
+      const products = Array.isArray(data.content)
+        ? data.content
+        : [];
+
+      setFeaturedProducts(products);
+    } catch (err) {
+      console.error("Featured product fetch error:", err);
+
+      setFeaturedProducts([]);
+    } finally {
+      setFeaturedLoading(false);
+    }
+  };
+
+  // =========================================================
+  // CHECK ADMIN + LOAD PRODUCTS
+  // =========================================================
 
   useEffect(() => {
     if (isLoggedIn) {
       checkAdminAccess();
+      loadFeaturedProducts();
     } else {
       setIsAdmin(false);
+      setFeaturedProducts([]);
     }
   }, [isLoggedIn]);
 
-  // ==========================================
+  // =========================================================
   // PROTECT ADMIN PAGE
-  // ==========================================
+  // =========================================================
 
   useEffect(() => {
     if (!isLoggedIn) {
       return;
     }
 
-    if (!checkingAdmin && currentPage === "admin" && !isAdmin) {
+    if (
+      !checkingAdmin &&
+      currentPage === "admin" &&
+      !isAdmin
+    ) {
       setCurrentPage("home");
     }
   }, [
@@ -124,9 +223,9 @@ function App() {
     currentPage,
   ]);
 
-  // ==========================================
+  // =========================================================
   // LOGIN
-  // ==========================================
+  // =========================================================
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -135,22 +234,25 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/users/login`, {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/users/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error("Invalid username or password.");
+          throw new Error(
+            "Invalid username or password."
+          );
         }
 
         throw new Error(
@@ -161,42 +263,24 @@ function App() {
       const token = await response.text();
 
       if (!token || token.trim() === "") {
-        throw new Error("Login failed. Server returned an empty token.");
+        throw new Error(
+          "Login failed. Server returned an empty token."
+        );
       }
-
-      // ========================================
-      // SAVE JWT
-      // ========================================
 
       localStorage.setItem(
         "jwtToken",
         token
       );
 
-      // ========================================
-      // SAVE USERNAME
-      // ========================================
-
       localStorage.setItem(
         "username",
         username
       );
 
-      console.log("JWT saved successfully.");
-
-      // ========================================
-      // UPDATE LOGIN STATE
-      // ========================================
-
       setIsLoggedIn(true);
       setCurrentPage("home");
-
-      // Clear old login form values
       setPassword("");
-
-      // ========================================
-      // CHECK ADMIN ACCESS
-      // ========================================
 
       const admin = await checkAdminAccess();
 
@@ -218,9 +302,9 @@ function App() {
     }
   };
 
-  // ==========================================
+  // =========================================================
   // LOGOUT
-  // ==========================================
+  // =========================================================
 
   const handleLogout = () => {
     localStorage.removeItem("jwtToken");
@@ -234,11 +318,26 @@ function App() {
 
     setCurrentPage("home");
     setError("");
+    setFeaturedProducts([]);
   };
 
-  // ==========================================
+  // =========================================================
+  // FORMAT PRICE
+  // =========================================================
+
+  const formatPrice = (price) => {
+    return Number(price || 0).toLocaleString(
+      "en-IN",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }
+    );
+  };
+
+  // =========================================================
   // LOGGED-IN SHOPSPHERE
-  // ==========================================
+  // =========================================================
 
   if (isLoggedIn) {
     const loggedInUser =
@@ -247,26 +346,15 @@ function App() {
     return (
       <div className="shop-page">
 
-        {/* =====================================
-            NAVBAR
-        ===================================== */}
+        {/* NAVBAR */}
 
         <nav className="navbar">
 
-          {/* BRAND */}
-
           <div className="brand">
-            <h1>
-              ShopSphere
-            </h1>
+            <h1>ShopSphere</h1>
           </div>
 
-
-          {/* NAVIGATION */}
-
           <div className="nav-links">
-
-            {/* HOME */}
 
             <button
               onClick={() =>
@@ -276,9 +364,6 @@ function App() {
               Home
             </button>
 
-
-            {/* PRODUCTS */}
-
             <button
               onClick={() =>
                 setCurrentPage("products")
@@ -286,9 +371,6 @@ function App() {
             >
               Products
             </button>
-
-
-            {/* CART */}
 
             <button
               onClick={() =>
@@ -298,9 +380,6 @@ function App() {
               Cart 🛒
             </button>
 
-
-            {/* MY ORDERS */}
-
             <button
               onClick={() =>
                 setCurrentPage("orders")
@@ -308,13 +387,6 @@ function App() {
             >
               My Orders
             </button>
-
-
-            {/* =================================
-                ADMIN BUTTON
-
-                ONLY ADMIN CAN SEE THIS
-            ================================= */}
 
             {isAdmin && (
               <button
@@ -325,9 +397,6 @@ function App() {
                 Admin 🔧
               </button>
             )}
-
-
-            {/* LOGOUT */}
 
             <button
               className="logout-button"
@@ -340,10 +409,7 @@ function App() {
 
         </nav>
 
-
-        {/* =====================================
-            ADMIN CHECK LOADING
-        ===================================== */}
+        {/* ADMIN CHECK */}
 
         {checkingAdmin && (
           <div
@@ -358,19 +424,13 @@ function App() {
           </div>
         )}
 
-
-        {/* =====================================
-            PRODUCTS
-        ===================================== */}
+        {/* PRODUCTS */}
 
         {currentPage === "products" && (
           <Products />
         )}
 
-
-        {/* =====================================
-            CART
-        ===================================== */}
+        {/* CART */}
 
         {currentPage === "cart" && (
           <Cart
@@ -380,10 +440,7 @@ function App() {
           />
         )}
 
-
-        {/* =====================================
-            CHECKOUT
-        ===================================== */}
+        {/* CHECKOUT */}
 
         {currentPage === "checkout" && (
           <Checkout
@@ -393,19 +450,13 @@ function App() {
           />
         )}
 
-
-        {/* =====================================
-            ORDERS
-        ===================================== */}
+        {/* ORDERS */}
 
         {currentPage === "orders" && (
           <Orders />
         )}
 
-
-        {/* =====================================
-            ADMIN DASHBOARD
-        ===================================== */}
+        {/* ADMIN */}
 
         {currentPage === "admin" && (
           isAdmin ? (
@@ -443,17 +494,13 @@ function App() {
           )
         )}
 
-
-        {/* =====================================
-            HOME
-        ===================================== */}
+        {/* HOME PAGE */}
 
         {currentPage === "home" && (
+
           <main className="home-content">
 
-            {/* =================================
-                WELCOME
-            ================================= */}
+            {/* HERO */}
 
             <div className="welcome-section">
 
@@ -466,9 +513,9 @@ function App() {
               </h2>
 
               <p>
-                Welcome to ShopSphere.
-                Your shopping experience
-                starts here.
+                Discover great products and
+                enjoy a simple shopping
+                experience with ShopSphere.
               </p>
 
               <button
@@ -477,112 +524,287 @@ function App() {
                   setCurrentPage("products")
                 }
               >
-                Start Shopping →
+                Shop Now →
               </button>
 
             </div>
 
+            {/* FEATURED PRODUCTS */}
 
-            {/* =================================
-                FEATURE CARDS
-            ================================= */}
-
-            <div className="feature-section">
-
-              {/* PRODUCTS */}
+            <section
+              style={{
+                marginTop: "55px",
+              }}
+            >
 
               <div
-                className="feature-card"
-                onClick={() =>
-                  setCurrentPage("products")
-                }
                 style={{
-                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-end",
+                  marginBottom: "22px",
                 }}
               >
 
-                <div className="feature-icon">
-                  🛍️
+                <div>
+
+                  <p
+                    style={{
+                      color: "#7c3cff",
+                      fontSize: "12px",
+                      fontWeight: "800",
+                      letterSpacing: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    SHOPSPHERE COLLECTION
+                  </p>
+
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: "30px",
+                    }}
+                  >
+                    Featured Products 🛍️
+                  </h2>
+
                 </div>
 
-                <h3>
-                  Explore Products
-                </h3>
-
-                <p>
-                  Discover products available
-                  in our store.
-                </p>
+                <button
+                  onClick={() =>
+                    setCurrentPage("products")
+                  }
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#8b5cf6",
+                    fontSize: "15px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                  }}
+                >
+                  View All →
+                </button>
 
               </div>
 
+              {/* LOADING */}
 
-              {/* CART */}
+              {featuredLoading && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#aaa",
+                  }}
+                >
+                  Loading products...
+                </div>
+              )}
 
-              <div
-                className="feature-card"
-                onClick={() =>
-                  setCurrentPage("cart")
-                }
+              {/* FEATURED PRODUCTS */}
+
+              {!featuredLoading &&
+                featuredProducts.length > 0 && (
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(4, minmax(0, 1fr))",
+                      gap: "18px",
+                    }}
+                  >
+
+                    {featuredProducts.map(
+                      (product) => {
+
+                        const image =
+                          getProductImage(product);
+
+                        return (
+                          <div
+                            key={product.id}
+                            style={{
+                              background: "#ffffff",
+                              borderRadius: "18px",
+                              padding: "20px",
+                              minHeight: "360px",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent:
+                                "space-between",
+                              boxShadow:
+                                "0 8px 30px rgba(0,0,0,0.08)",
+                              overflow: "hidden",
+                            }}
+                          >
+
+                            {/* PRODUCT IMAGE */}
+
+                            <div
+                              style={{
+                                height: "180px",
+                                width: "100%",
+                                borderRadius: "14px",
+                                background:
+                                  "linear-gradient(135deg, #f5f1ff, #eee8ff)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent:
+                                  "center",
+                                marginBottom: "18px",
+                                overflow: "hidden",
+                                position: "relative",
+                              }}
+                            >
+
+                              <span
+                                style={{
+                                  position: "absolute",
+                                  fontSize: "52px",
+                                  opacity: 0.9,
+                                }}
+                              >
+                                🛍️
+                              </span>
+
+                              {image && (
+                                <img
+                                  src={image}
+                                  alt={product.name}
+                                  loading="eager"
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "contain",
+                                    padding: "10px",
+                                    boxSizing:
+                                      "border-box",
+                                    position:
+                                      "relative",
+                                    zIndex: 1,
+                                    display: "block",
+                                  }}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display =
+                                      "none";
+                                  }}
+                                />
+                              )}
+
+                            </div>
+
+                            {/* PRODUCT DETAILS */}
+
+                            <div>
+
+                              <h3
+                                style={{
+                                  color: "#17131f",
+                                  fontSize: "18px",
+                                  lineHeight: "1.3",
+                                  margin:
+                                    "0 0 8px",
+                                }}
+                              >
+                                {product.name}
+                              </h3>
+
+                              <p
+                                style={{
+                                  color: "#777",
+                                  fontSize: "13px",
+                                  lineHeight: "1.5",
+                                  margin:
+                                    "0 0 15px",
+                                  minHeight: "40px",
+                                }}
+                              >
+                                {product.description ||
+                                  "Quality product from ShopSphere."}
+                              </p>
+
+                              <div
+                                style={{
+                                  color: "#6332ff",
+                                  fontSize: "20px",
+                                  fontWeight: "800",
+                                }}
+                              >
+                                ₹
+                                {formatPrice(
+                                  product.price
+                                )}
+                              </div>
+
+                            </div>
+
+                          </div>
+                        );
+                      }
+                    )}
+
+                  </div>
+                )}
+
+              {/* NO PRODUCTS */}
+
+              {!featuredLoading &&
+                featuredProducts.length === 0 && (
+
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "30px",
+                      color: "#aaa",
+                    }}
+                  >
+                    Products will appear here once
+                    they are available.
+                  </div>
+
+                )}
+
+            </section>
+
+            {/* QUICK ACCESS */}
+
+            <section
+              style={{
+                marginTop: "55px",
+              }}
+            >
+
+              <p
                 style={{
-                  cursor: "pointer",
+                  color: "#7c3cff",
+                  fontSize: "12px",
+                  fontWeight: "800",
+                  letterSpacing: "4px",
+                  marginBottom: "8px",
                 }}
               >
+                QUICK ACCESS
+              </p>
 
-                <div className="feature-icon">
-                  🛒
-                </div>
-
-                <h3>
-                  Your Cart
-                </h3>
-
-                <p>
-                  Add products and manage
-                  your shopping cart.
-                </p>
-
-              </div>
-
-
-              {/* ORDERS */}
-
-              <div
-                className="feature-card"
-                onClick={() =>
-                  setCurrentPage("orders")
-                }
+              <h2
                 style={{
-                  cursor: "pointer",
+                  marginTop: 0,
+                  marginBottom: "22px",
+                  fontSize: "30px",
                 }}
               >
+                Your ShopSphere
+              </h2>
 
-                <div className="feature-icon">
-                  📦
-                </div>
+              <div className="feature-section">
 
-                <h3>
-                  Your Orders
-                </h3>
-
-                <p>
-                  Track and manage your
-                  previous orders.
-                </p>
-
-              </div>
-
-
-              {/* =================================
-                  ADMIN CARD
-                  ONLY ADMIN
-              ================================= */}
-
-              {isAdmin && (
                 <div
                   className="feature-card"
                   onClick={() =>
-                    setCurrentPage("admin")
+                    setCurrentPage("cart")
                   }
                   style={{
                     cursor: "pointer",
@@ -590,22 +812,75 @@ function App() {
                 >
 
                   <div className="feature-icon">
-                    🔧
+                    🛒
                   </div>
 
                   <h3>
-                    Admin Dashboard
+                    Your Cart
                   </h3>
 
                   <p>
-                    Manage customer orders
-                    and update order status.
+                    Review items and checkout.
                   </p>
 
                 </div>
-              )}
 
-            </div>
+                <div
+                  className="feature-card"
+                  onClick={() =>
+                    setCurrentPage("orders")
+                  }
+                  style={{
+                    cursor: "pointer",
+                  }}
+                >
+
+                  <div className="feature-icon">
+                    📦
+                  </div>
+
+                  <h3>
+                    Your Orders
+                  </h3>
+
+                  <p>
+                    Track your purchases.
+                  </p>
+
+                </div>
+
+                {isAdmin && (
+
+                  <div
+                    className="feature-card"
+                    onClick={() =>
+                      setCurrentPage("admin")
+                    }
+                    style={{
+                      cursor: "pointer",
+                    }}
+                  >
+
+                    <div className="feature-icon">
+                      🔧
+                    </div>
+
+                    <h3>
+                      Admin Dashboard
+                    </h3>
+
+                    <p>
+                      Manage products and
+                      customer orders.
+                    </p>
+
+                  </div>
+
+                )}
+
+              </div>
+
+            </section>
 
           </main>
         )}
@@ -614,19 +889,14 @@ function App() {
     );
   }
 
-
-  // ==========================================
+  // =========================================================
   // LOGIN PAGE
-  // ==========================================
+  // =========================================================
 
   return (
     <div className="login-page">
 
       <div className="login-card">
-
-        {/* =====================================
-            BRAND
-        ===================================== */}
 
         <div className="brand">
 
@@ -640,11 +910,6 @@ function App() {
 
         </div>
 
-
-        {/* =====================================
-            LOGIN CONTENT
-        ===================================== */}
-
         <div className="login-content">
 
           <h2>
@@ -655,16 +920,9 @@ function App() {
             Login to continue shopping
           </p>
 
-
-          {/* =================================
-              LOGIN FORM
-          ================================= */}
-
           <form
             onSubmit={handleLogin}
           >
-
-            {/* USERNAME */}
 
             <div className="input-group">
 
@@ -686,9 +944,6 @@ function App() {
 
             </div>
 
-
-            {/* PASSWORD */}
-
             <div className="input-group">
 
               <label>
@@ -709,17 +964,11 @@ function App() {
 
             </div>
 
-
-            {/* ERROR */}
-
             {error && (
               <div className="error-message">
                 {error}
               </div>
             )}
-
-
-            {/* LOGIN BUTTON */}
 
             <button
               type="submit"
@@ -732,9 +981,6 @@ function App() {
             </button>
 
           </form>
-
-
-          {/* SECURITY MESSAGE */}
 
           <p className="demo-note">
             Secure login powered by JWT

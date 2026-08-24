@@ -29,12 +29,12 @@ public class Product {
     @Column(nullable = false)
     private double price;
 
-    @Min(
-        value = 0,
-        message = "Stock quantity cannot be negative"
-    )
+    @Min(value = 0, message = "Stock quantity cannot be negative")
     @Column(nullable = false)
     private int stockQuantity;
+
+    @Column(length = 1000)
+    private String imageUrl;
 
     public Product() {
     }
@@ -77,5 +77,13 @@ public class Product {
 
     public void setStockQuantity(int stockQuantity) {
         this.stockQuantity = stockQuantity;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

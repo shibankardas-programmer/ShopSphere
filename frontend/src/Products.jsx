@@ -3,11 +3,45 @@ import "./Products.css";
 
 const API_URL = "http://localhost:8080/api";
 
+const PAGE_SIZE = 6;
+
 // =========================================================
-// PAGINATION
+// PRODUCT IMAGE MAPPING
 // =========================================================
 
-const PAGE_SIZE = 6;
+const productImages = {
+  "AeroSound Wireless Headphones": "/products/headphones.jpg",
+  "Nova Wireless Earbuds": "/products/earbuds.jpg",
+  "KeyPro Mechanical Keyboard": "/products/keyboard.jpg",
+  "SwiftClick Wireless Mouse": "/products/mouse.jpg",
+  "VisionMax Smart TV": "/products/smart-tv.jpg",
+  "VoltCharge Power Bank": "/products/power-bank.jpg",
+  "GlowDesk LED Lamp": "/products/led-lamp.jpg",
+  "SoundPod Bluetooth Speaker": "/products/bluetooth-speaker.jpg",
+  "FlexFit Laptop Stand": "/products/laptop-stand.jpg",
+};
+
+// =========================================================
+// GET PRODUCT IMAGE
+// =========================================================
+
+const getProductImage = (product) => {
+  if (product?.imageUrl) {
+    const imageUrl = String(product.imageUrl).trim();
+
+    if (
+      imageUrl.startsWith("http://") ||
+      imageUrl.startsWith("https://") ||
+      imageUrl.startsWith("/")
+    ) {
+      return imageUrl;
+    }
+
+    return `/products/${imageUrl}`;
+  }
+
+  return productImages[product?.name] || null;
+};
 
 function Products() {
   // =========================================================
@@ -50,10 +84,6 @@ function Products() {
 
   // =========================================================
   // FILTERED RESULTS
-  //
-  // Search endpoints return List<Product>.
-  // We keep the complete filtered list here and paginate
-  // it on the frontend.
   // =========================================================
 
   const [filteredResults, setFilteredResults] = useState(null);
@@ -67,9 +97,7 @@ function Products() {
   }, []);
 
   // =========================================================
-  // FETCH NORMAL PRODUCTS
-  //
-  // GET /api/products?page=0&size=6&sort=id
+  // FETCH PRODUCTS
   // =========================================================
 
   const fetchProducts = async (page = 0) => {
@@ -134,26 +162,32 @@ function Products() {
           : pageProducts.length
       );
 
-      // Normal products are being displayed.
       setFilteredResults(null);
 
     } catch (err) {
-      console.error("Product fetch error:", err);
+      console.error(
+        "Product fetch error:",
+        err
+      );
 
       setError(
         err.message ||
           "Failed to load products."
       );
+
     } finally {
       setLoading(false);
     }
   };
 
   // =========================================================
-  // DISPLAY FILTERED RESULTS FOR A PAGE
+  // DISPLAY FILTERED PAGE
   // =========================================================
 
-  const displayFilteredPage = (results, page) => {
+  const displayFilteredPage = (
+    results,
+    page
+  ) => {
     const total = results.length;
 
     const pages =
@@ -161,10 +195,14 @@ function Products() {
         ? 0
         : Math.ceil(total / PAGE_SIZE);
 
-    const start = page * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
+    const start =
+      page * PAGE_SIZE;
 
-    const currentResults = results.slice(start, end);
+    const end =
+      start + PAGE_SIZE;
+
+    const currentResults =
+      results.slice(start, end);
 
     setProducts(currentResults);
     setCurrentPage(page);
@@ -182,7 +220,8 @@ function Products() {
       setError("");
       setMessage("");
 
-      const token = localStorage.getItem("jwtToken");
+      const token =
+        localStorage.getItem("jwtToken");
 
       if (!token) {
         setError("Please login first.");
@@ -190,7 +229,7 @@ function Products() {
       }
 
       // =====================================================
-      // VALIDATE MINIMUM PRICE
+      // VALIDATE PRICES
       // =====================================================
 
       if (
@@ -203,10 +242,6 @@ function Products() {
         return;
       }
 
-      // =====================================================
-      // VALIDATE MAXIMUM PRICE
-      // =====================================================
-
       if (
         maxPrice !== "" &&
         Number(maxPrice) < 0
@@ -217,14 +252,11 @@ function Products() {
         return;
       }
 
-      // =====================================================
-      // VALIDATE PRICE RANGE
-      // =====================================================
-
       if (
         minPrice !== "" &&
         maxPrice !== "" &&
-        Number(minPrice) > Number(maxPrice)
+        Number(minPrice) >
+          Number(maxPrice)
       ) {
         setError(
           "Minimum price cannot be greater than maximum price."
@@ -233,7 +265,7 @@ function Products() {
       }
 
       // =====================================================
-      // CHECK WHETHER FILTERS EXIST
+      // CHECK FILTERS
       // =====================================================
 
       const hasSearch =
@@ -261,8 +293,7 @@ function Products() {
       }
 
       // =====================================================
-      // IN-STOCK ONLY
-      // WITHOUT OTHER FILTERS
+      // ONLY IN-STOCK FILTER
       // =====================================================
 
       if (
@@ -276,8 +307,10 @@ function Products() {
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
+              Authorization:
+                `Bearer ${token}`,
+              Accept:
+                "application/json",
             },
           }
         );
@@ -288,15 +321,20 @@ function Products() {
           );
         }
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
-        const results = Array.isArray(data)
-          ? data
-          : [];
+        const results =
+          Array.isArray(data)
+            ? data
+            : [];
 
         setFilteredResults(results);
 
-        displayFilteredPage(results, 0);
+        displayFilteredPage(
+          results,
+          0
+        );
 
         return;
       }
@@ -305,7 +343,8 @@ function Products() {
       // BUILD SEARCH URL
       // =====================================================
 
-      const params = new URLSearchParams();
+      const params =
+        new URLSearchParams();
 
       if (hasSearch) {
         params.append(
@@ -328,24 +367,26 @@ function Products() {
         );
       }
 
-      const queryString = params.toString();
-
       const url =
-        `${API_URL}/products/search?${queryString}`;
+        `${API_URL}/products/search?${params.toString()}`;
 
       // =====================================================
-      // SEARCH API REQUEST
+      // SEARCH API
       // =====================================================
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      });
+      const response =
+        await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+            Accept:
+              "application/json",
+          },
+        });
 
       if (!response.ok) {
+
         if (response.status === 400) {
           const backendMessage =
             await response.text();
@@ -367,36 +408,35 @@ function Products() {
         );
       }
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
-      let results = Array.isArray(data)
-        ? data
-        : [];
+      let results =
+        Array.isArray(data)
+          ? data
+          : [];
 
       // =====================================================
-      // APPLY IN-STOCK FILTER
+      // IN-STOCK FILTER
       // =====================================================
 
       if (inStockOnly) {
-        results = results.filter(
-          (product) =>
-            product.stockQuantity > 0
-        );
+        results =
+          results.filter(
+            (product) =>
+              product.stockQuantity > 0
+          );
       }
-
-      // =====================================================
-      // SAVE FILTERED RESULTS
-      // =====================================================
 
       setFilteredResults(results);
 
-      // =====================================================
-      // SHOW FIRST PAGE
-      // =====================================================
-
-      displayFilteredPage(results, 0);
+      displayFilteredPage(
+        results,
+        0
+      );
 
     } catch (err) {
+
       console.error(
         "Product search error:",
         err
@@ -406,6 +446,7 @@ function Products() {
         err.message ||
           "Failed to search products."
       );
+
     } finally {
       setSearching(false);
     }
@@ -415,169 +456,196 @@ function Products() {
   // CLEAR FILTERS
   // =========================================================
 
-  const clearFilters = async () => {
-    setSearchName("");
-    setMinPrice("");
-    setMaxPrice("");
-    setInStockOnly(false);
+  const clearFilters =
+    async () => {
 
-    setError("");
-    setMessage("");
+      setSearchName("");
+      setMinPrice("");
+      setMaxPrice("");
+      setInStockOnly(false);
 
-    setFilteredResults(null);
+      setError("");
+      setMessage("");
 
-    await fetchProducts(0);
-  };
+      setFilteredResults(null);
+
+      await fetchProducts(0);
+    };
 
   // =========================================================
   // SEARCH ON ENTER
   // =========================================================
 
-  const handleSearchKeyDown = (event) => {
-    if (event.key === "Enter") {
-      searchProducts();
-    }
-  };
+  const handleSearchKeyDown =
+    (event) => {
+
+      if (event.key === "Enter") {
+        searchProducts();
+      }
+    };
 
   // =========================================================
   // PAGINATION
   // =========================================================
 
-  const goToPage = async (page) => {
-    if (
-      page < 0 ||
-      page >= totalPages ||
-      page === currentPage
-    ) {
-      return;
-    }
+  const goToPage =
+    async (page) => {
 
-    // =====================================================
-    // FILTERED RESULTS
-    // =====================================================
+      if (
+        page < 0 ||
+        page >= totalPages ||
+        page === currentPage
+      ) {
+        return;
+      }
 
-    if (filteredResults !== null) {
-      displayFilteredPage(
-        filteredResults,
-        page
-      );
+      if (
+        filteredResults !== null
+      ) {
+
+        displayFilteredPage(
+          filteredResults,
+          page
+        );
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+
+        return;
+      }
+
+      await fetchProducts(page);
 
       window.scrollTo({
         top: 0,
         behavior: "smooth",
       });
-
-      return;
-    }
-
-    // =====================================================
-    // NORMAL BACKEND PAGINATION
-    // =====================================================
-
-    await fetchProducts(page);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+    };
 
   // =========================================================
   // ADD TO CART
   // =========================================================
 
-  const addToCart = async (productId) => {
-    try {
-      setAddingProduct(productId);
-      setMessage("");
-      setError("");
+  const addToCart =
+    async (productId) => {
 
-      const token =
-        localStorage.getItem("jwtToken");
+      try {
 
-      if (!token) {
-        setError("Please login first.");
-        return;
-      }
-
-      const response = await fetch(
-        `${API_URL}/cart/add?productId=${productId}&quantity=1`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status === 400) {
-          const backendMessage =
-            await response.text();
-
-          throw new Error(
-            backendMessage ||
-              "Unable to add product to cart."
-          );
-        }
-
-        if (response.status === 401) {
-          throw new Error(
-            "Session expired. Please login again."
-          );
-        }
-
-        throw new Error(
-          `Failed to add product (${response.status})`
+        setAddingProduct(
+          productId
         );
-      }
 
-      await response.json();
-
-      setMessage(
-        "Product added to cart! 🛒"
-      );
-
-      setTimeout(() => {
         setMessage("");
-      }, 2000);
+        setError("");
 
-    } catch (err) {
-      console.error(
-        "Add to cart error:",
-        err
-      );
+        const token =
+          localStorage.getItem(
+            "jwtToken"
+          );
 
-      setError(
-        err.message ||
-          "Failed to add product to cart."
-      );
+        if (!token) {
+          setError(
+            "Please login first."
+          );
+          return;
+        }
 
-    } finally {
-      setAddingProduct(null);
-    }
-  };
+        const response =
+          await fetch(
+            `${API_URL}/cart/add?productId=${productId}&quantity=1`,
+            {
+              method: "POST",
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+                Accept:
+                  "application/json",
+              },
+            }
+          );
+
+        if (!response.ok) {
+
+          if (
+            response.status === 400
+          ) {
+
+            const backendMessage =
+              await response.text();
+
+            throw new Error(
+              backendMessage ||
+                "Unable to add product to cart."
+            );
+          }
+
+          if (
+            response.status === 401
+          ) {
+            throw new Error(
+              "Session expired. Please login again."
+            );
+          }
+
+          throw new Error(
+            `Failed to add product (${response.status})`
+          );
+        }
+
+        await response.json();
+
+        setMessage(
+          "Product added to cart! 🛒"
+        );
+
+        setTimeout(() => {
+          setMessage("");
+        }, 2000);
+
+      } catch (err) {
+
+        console.error(
+          "Add to cart error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Failed to add product to cart."
+        );
+
+      } finally {
+
+        setAddingProduct(null);
+      }
+    };
 
   // =========================================================
   // FORMAT PRICE
   // =========================================================
 
-  const formatPrice = (price) => {
-    return Number(price || 0).toLocaleString(
-      "en-IN",
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }
-    );
-  };
+  const formatPrice =
+    (price) => {
+
+      return Number(
+        price || 0
+      ).toLocaleString(
+        "en-IN",
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }
+      );
+    };
 
   // =========================================================
   // LOADING
   // =========================================================
 
   if (loading) {
+
     return (
       <div className="products-page">
 
@@ -609,9 +677,7 @@ function Products() {
   return (
     <div className="products-page">
 
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+      {/* HEADER */}
 
       <div className="products-header">
 
@@ -629,10 +695,7 @@ function Products() {
 
       </div>
 
-
-      {/* =====================================================
-          SEARCH & FILTER CARD
-      ===================================================== */}
+      {/* SEARCH & FILTER */}
 
       <div className="product-filters">
 
@@ -648,7 +711,6 @@ function Products() {
 
         </div>
 
-
         {/* SEARCH BY NAME */}
 
         <div className="search-box">
@@ -662,13 +724,16 @@ function Products() {
             placeholder="e.g. Wireless Headphones"
             value={searchName}
             onChange={(e) =>
-              setSearchName(e.target.value)
+              setSearchName(
+                e.target.value
+              )
             }
-            onKeyDown={handleSearchKeyDown}
+            onKeyDown={
+              handleSearchKeyDown
+            }
           />
 
         </div>
-
 
         {/* PRICE FILTERS */}
 
@@ -686,13 +751,16 @@ function Products() {
               placeholder="Min price"
               value={minPrice}
               onChange={(e) =>
-                setMinPrice(e.target.value)
+                setMinPrice(
+                  e.target.value
+                )
               }
-              onKeyDown={handleSearchKeyDown}
+              onKeyDown={
+                handleSearchKeyDown
+              }
             />
 
           </div>
-
 
           <div className="price-filter">
 
@@ -706,15 +774,18 @@ function Products() {
               placeholder="Max price"
               value={maxPrice}
               onChange={(e) =>
-                setMaxPrice(e.target.value)
+                setMaxPrice(
+                  e.target.value
+                )
               }
-              onKeyDown={handleSearchKeyDown}
+              onKeyDown={
+                handleSearchKeyDown
+              }
             />
 
           </div>
 
         </div>
-
 
         {/* STOCK FILTER */}
 
@@ -736,14 +807,15 @@ function Products() {
 
         </label>
 
-
-        {/* FILTER BUTTONS */}
+        {/* BUTTONS */}
 
         <div className="filter-buttons">
 
           <button
             className="search-products-button"
-            onClick={searchProducts}
+            onClick={
+              searchProducts
+            }
             disabled={searching}
           >
             {searching
@@ -751,10 +823,11 @@ function Products() {
               : "🔍 Search Products"}
           </button>
 
-
           <button
             className="clear-filters-button"
-            onClick={clearFilters}
+            onClick={
+              clearFilters
+            }
             disabled={searching}
           >
             ↻ Clear Filters
@@ -764,10 +837,7 @@ function Products() {
 
       </div>
 
-
-      {/* =====================================================
-          SUCCESS MESSAGE
-      ===================================================== */}
+      {/* SUCCESS MESSAGE */}
 
       {message && (
         <div className="success-message">
@@ -775,10 +845,7 @@ function Products() {
         </div>
       )}
 
-
-      {/* =====================================================
-          ERROR MESSAGE
-      ===================================================== */}
+      {/* ERROR MESSAGE */}
 
       {error && (
         <div className="error-message">
@@ -786,10 +853,7 @@ function Products() {
         </div>
       )}
 
-
-      {/* =====================================================
-          RESULT COUNT
-      ===================================================== */}
+      {/* RESULT COUNT */}
 
       <div className="products-result-info">
 
@@ -803,10 +867,7 @@ function Products() {
 
       </div>
 
-
-      {/* =====================================================
-          NO PRODUCTS
-      ===================================================== */}
+      {/* NO PRODUCTS */}
 
       {products.length === 0 ? (
 
@@ -827,7 +888,9 @@ function Products() {
 
           <button
             className="clear-filters-button"
-            onClick={clearFilters}
+            onClick={
+              clearFilters
+            }
           >
             Show All Products
           </button>
@@ -838,135 +901,146 @@ function Products() {
 
         <>
 
-          {/* =================================================
-              PRODUCT GRID
-          ================================================= */}
+          {/* PRODUCT GRID */}
 
           <div className="products-grid">
 
-            {products.map((product) => (
+            {products.map(
+              (product) => {
 
-              <div
-                className="product-card"
-                key={product.id}
-              >
+                const image =
+                  getProductImage(
+                    product
+                  );
 
-                {/* PRODUCT IMAGE */}
-
-                <div className="product-image">
-
-                  <span className="product-image-icon">
-                    🛍️
-                  </span>
-
-                </div>
-
-
-                {/* PRODUCT DETAILS */}
-
-                <div className="product-details">
-
-                  <div className="product-top">
-
-                    <h2>
-                      {product.name}
-                    </h2>
-
-                  </div>
-
-
-                  <p className="product-description">
-
-                    {product.description ||
-                      "Quality product from ShopSphere."}
-
-                  </p>
-
-
-                  {/* PRICE */}
-
-                  <div className="product-price">
-
-                    ₹
-                    {formatPrice(
-                      product.price
-                    )}
-
-                  </div>
-
-
-                  {/* STOCK */}
+                return (
 
                   <div
-                    className={
-                      product.stockQuantity > 0
-                        ? "stock stock-available"
-                        : "stock stock-unavailable"
-                    }
+                    className="product-card"
+                    key={product.id}
                   >
 
-                    <span className="stock-dot">
-                      ●
-                    </span>
+                    {/* PRODUCT IMAGE */}
 
-                    {product.stockQuantity > 0
-                      ? `In stock · ${product.stockQuantity} available`
-                      : "Out of stock"}
+                    <div className="product-image">
+
+                      {image && (
+                        <img
+                          src={image}
+                          alt={product.name}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display =
+                              "none";
+                          }}
+                        />
+                      )}
+
+                    </div>
+
+                    {/* PRODUCT DETAILS */}
+
+                    <div className="product-details">
+
+                      <div className="product-top">
+
+                        <h2>
+                          {product.name}
+                        </h2>
+
+                      </div>
+
+                      <p className="product-description">
+
+                        {product.description ||
+                          "Quality product from ShopSphere."}
+
+                      </p>
+
+                      {/* PRICE */}
+
+                      <div className="product-price">
+
+                        ₹
+                        {formatPrice(
+                          product.price
+                        )}
+
+                      </div>
+
+                      {/* STOCK */}
+
+                      <div
+                        className={
+                          product.stockQuantity >
+                          0
+                            ? "stock stock-available"
+                            : "stock stock-unavailable"
+                        }
+                      >
+
+                        <span className="stock-dot">
+                          ●
+                        </span>
+
+                        {product.stockQuantity >
+                        0
+                          ? `In stock · ${product.stockQuantity} available`
+                          : "Out of stock"}
+
+                      </div>
+
+                      {/* ADD TO CART */}
+
+                      {product.stockQuantity >
+                      0 ? (
+
+                        <button
+                          className="add-cart-button"
+                          onClick={() =>
+                            addToCart(
+                              product.id
+                            )
+                          }
+                          disabled={
+                            addingProduct ===
+                            product.id
+                          }
+                        >
+
+                          {addingProduct ===
+                          product.id
+                            ? "Adding..."
+                            : "Add to Cart 🛒"}
+
+                        </button>
+
+                      ) : (
+
+                        <button
+                          className="add-cart-button disabled"
+                          disabled
+                        >
+                          Out of Stock
+                        </button>
+
+                      )}
+
+                    </div>
 
                   </div>
 
-
-                  {/* ADD TO CART */}
-
-                  {product.stockQuantity > 0 ? (
-
-                    <button
-                      className="add-cart-button"
-                      onClick={() =>
-                        addToCart(product.id)
-                      }
-                      disabled={
-                        addingProduct ===
-                        product.id
-                      }
-                    >
-
-                      {addingProduct ===
-                      product.id
-                        ? "Adding..."
-                        : "Add to Cart 🛒"}
-
-                    </button>
-
-                  ) : (
-
-                    <button
-                      className="add-cart-button disabled"
-                      disabled
-                    >
-                      Out of Stock
-                    </button>
-
-                  )}
-
-                </div>
-
-              </div>
-
-            ))}
+                );
+              }
+            )}
 
           </div>
 
-
-          {/* =================================================
-              PAGINATION
-          ================================================= */}
+          {/* PAGINATION */}
 
           {totalPages > 1 && (
 
             <div className="products-pagination">
-
-              {/* PREVIOUS */}
 
               <button
                 className="pagination-button"
@@ -982,14 +1056,12 @@ function Products() {
                 ← Previous
               </button>
 
-
-              {/* PAGE NUMBERS */}
-
               <div className="pagination-numbers">
 
                 {Array.from(
                   {
-                    length: totalPages,
+                    length:
+                      totalPages,
                   },
                   (_, index) => (
 
@@ -997,13 +1069,16 @@ function Products() {
                       key={index}
                       className={
                         `pagination-number ${
-                          currentPage === index
+                          currentPage ===
+                          index
                             ? "active"
                             : ""
                         }`
                       }
                       onClick={() =>
-                        goToPage(index)
+                        goToPage(
+                          index
+                        )
                       }
                     >
                       {index + 1}
@@ -1013,9 +1088,6 @@ function Products() {
                 )}
 
               </div>
-
-
-              {/* NEXT */}
 
               <button
                 className="pagination-button"
@@ -1036,10 +1108,7 @@ function Products() {
 
           )}
 
-
-          {/* =================================================
-              PAGINATION INFORMATION
-          ================================================= */}
+          {/* PAGINATION INFORMATION */}
 
           {totalPages > 1 && (
 
