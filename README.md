@@ -129,8 +129,13 @@ ShopSphere follows a **full-stack layered architecture**:
                     │ Orders                   │
                     │ Transactions             │
                     └──────────────────────────┘
+```
+---
 
-##📂 Project Structure
+## 📂 Project Structure
+
+```text
+
 ShopSphere/
 │
 ├── frontend/
@@ -180,9 +185,10 @@ ShopSphere/
 ├── mvnw
 ├── mvnw.cmd
 └── README.md
-
+```
 
 ##🔐 Authentication Flow
+```text
 User
  │
  ▼
@@ -205,6 +211,7 @@ JWT Authentication Filter
  │
  ▼
 Protected REST API
+```
 
 ##🔍 Product Search & Filtering
 
@@ -228,8 +235,10 @@ Maximum Price:
 
 In Stock:
 ✓
+---
 
 ##🛒 Shopping Cart Flow
+```text
 Browse Products
        │
        ▼
@@ -246,9 +255,12 @@ Calculate Total
        │
        ▼
 Place Order
+```
+---
 
 ##📦 Order Management
 After placing an order, users can access their order history and view their purchased products.
+```text
 Cart
  │
  ▼
@@ -265,6 +277,8 @@ Orders Page
  │
  ▼
 View Order History
+```
+---
 
 ##📸 Screenshots
 
@@ -286,6 +300,7 @@ View Order History
 
 ###📦 Orders Page
 <img width="1881" height="982" alt="image" src="https://github.com/user-attachments/assets/446b5023-bfb7-46f8-9d22-8c80d8973d76" />
+---
 
 ##⚙️ Installation
 ###1️⃣ Clone the Repository
@@ -390,6 +405,7 @@ Browser
 React Frontend
 
 Authentication-protected endpoints require a valid JWT token.
+---
 
 ##🚀 Future Enhancements
 
@@ -422,6 +438,7 @@ Integrating frontend and backend applications
 Implementing search and filtering
 Managing shopping cart and order workflows
 Using Git and GitHub for version control
+---
 
 ##👨‍💻 Author
 
@@ -437,10 +454,12 @@ https://github.com/shibankardas-programmer
 ##LinkedIn
 
 https://www.linkedin.com/in/shibankar-das-916517381
+---
 
 ##⭐ If you like this project
 
 If you find this project useful or interesting, please consider giving it a ⭐ on GitHub!
+---
 
 ##📄 License
 
